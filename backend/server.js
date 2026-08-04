@@ -5,13 +5,18 @@ const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 
-dotenv.config();
+// Only load dotenv in development
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 
 // ========== CORS CONFIGURATION ==========
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://tickethub.vercel.app', 'https://tickethub-git-main.vercel.app'] 
+    : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -246,8 +251,19 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
-  console.log(`💰 Payment endpoint: http://localhost:${PORT}/api/pay`);
+// ========== HEALTH CHECK (for Vercel) ==========
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ========== EXPORT FOR VERCEL ==========
+module.exports = app;
+
+// ========== LOCAL DEVELOPMENT ==========
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`✅ Backend running on http://localhost:${PORT}`);
+    console.log(`💰 Payment endpoint: http://localhost:${PORT}/api/pay`);
+  });
+}
