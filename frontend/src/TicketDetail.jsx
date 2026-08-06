@@ -33,7 +33,7 @@ function TicketDetail() {
   const fetchTicket = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:5000/api/tickets/${id}`);
+      const res = await axios.get(`/api/tickets/${id}`);
       setTicket(res.data);
       setLoading(false);
     } catch (error) {

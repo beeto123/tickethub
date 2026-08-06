@@ -52,7 +52,7 @@ function Admin() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5000/api/tickets');
+      const res = await axios.get('/api/tickets');
       setTickets(res.data);
       setLoading(false);
     } catch (error) {
@@ -64,7 +64,7 @@ function Admin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/admin/login', { password });
+      const res = await axios.post('/api/admin/login', { password });
       if (res.data.success) {
         setIsLoggedIn(true);
         sessionStorage.setItem('adminLoggedIn', 'true');
@@ -85,7 +85,7 @@ function Admin() {
 
     setUploading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/upload', formData, {
+      const res = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setNewTicket({ ...newTicket, image: res.data.imageUrl });
@@ -105,7 +105,7 @@ function Admin() {
       return;
     }
     try {
-      await axios.post('http://localhost:5000/api/tickets', newTicket);
+      await axios.post('/api/tickets', newTicket);
       setNewTicket({ 
         event_name: '', 
         date: '', 
@@ -128,7 +128,7 @@ function Admin() {
     if (!confirm('Mark this ticket as sold?')) return;
     
     try {
-      await axios.patch(`http://localhost:5000/api/tickets/${id}`, { is_sold: true });
+      await axios.patch(`/api/tickets/${id}`, { is_sold: true });
       await fetchTickets();
       setMessage('✅ Ticket marked as sold!');
       setTimeout(() => setMessage(''), 3000);
@@ -140,7 +140,7 @@ function Admin() {
 
   const handleMarkUnsold = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/tickets/${id}`, { is_sold: false });
+      await axios.patch(`/api/tickets/${id}`, { is_sold: false });
       await fetchTickets();
       setMessage('✅ Ticket marked as available!');
       setTimeout(() => setMessage(''), 3000);
