@@ -43,7 +43,9 @@ function Admin() {
 
   useEffect(() => {
     const loggedIn = sessionStorage.getItem('adminLoggedIn');
-    if (loggedIn === 'true') {
+    const token = sessionStorage.getItem('adminToken');
+    if (loggedIn === 'true' && token) {
+      axios.defaults.headers.common['x-admin-password'] = token;
       setIsLoggedIn(true);
       fetchTickets();
     }
@@ -66,8 +68,10 @@ function Admin() {
     try {
       const res = await axios.post('/api/admin/login', { password });
       if (res.data.success) {
-        setIsLoggedIn(true);
+        axios.defaults.headers.common['x-admin-password'] = password;
         sessionStorage.setItem('adminLoggedIn', 'true');
+        sessionStorage.setItem('adminToken', password);
+        setIsLoggedIn(true);
         fetchTickets();
         setLoginError('');
       }
@@ -161,14 +165,9 @@ function Admin() {
     const id = ticketToDelete.id;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/tickets/${id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
+      const res = await axios.delete(`/api/tickets/${id}`);
+
+      if (res.data.success) {
         setTickets(tickets.filter(ticket => ticket.id !== id));
         setMessage('✅ Ticket deleted successfully!');
         setTimeout(() => setMessage(''), 3000);
@@ -189,6 +188,8 @@ function Admin() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('adminLoggedIn');
+    sessionStorage.removeItem('adminToken');
+    delete axios.defaults.headers.common['x-admin-password'];
     setIsLoggedIn(false);
   };
 
@@ -220,7 +221,6 @@ function Admin() {
               Login
             </button>
           </form>
-          <p className="text-sm text-gray-500 mt-4 text-center">Default password: admin123</p>
         </div>
       </div>
     );

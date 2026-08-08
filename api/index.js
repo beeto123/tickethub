@@ -48,8 +48,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // Your Trust Wallet USDT TRC20 address
 const YOUR_WALLET = "TFj4rDL2MwisN5XfXKNLFoRie7SVwrhh6H";
 
+// ========== ADMIN AUTH ==========
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+if (!process.env.ADMIN_PASSWORD) {
+  console.warn('⚠️  ADMIN_PASSWORD env var not set — using insecure default. Set it in Vercel → Settings → Environment Variables.');
+}
+
+function requireAdmin(req, res, next) {
+  const supplied = req.headers['x-admin-password'];
+  if (supplied && supplied === ADMIN_PASSWORD) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Unauthorized' });
+}
+
 // ========== IMAGE UPLOAD ==========
-app.post('/api/upload', upload.single('image'), async (req, res) => {
+app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -117,7 +131,7 @@ app.get('/api/tickets/:id', async (req, res) => {
 });
 
 // ========== ADD NEW TICKET - FIXED ==========
-app.post('/api/tickets', async (req, res) => {
+app.post('/api/tickets', requireAdmin, async (req, res) => {
   try {
     const { event_name, date, location, price, image, currency, payment_link } = req.body;
     
@@ -184,7 +198,7 @@ app.post('/api/tickets', async (req, res) => {
 });
 
 // ========== UPDATE TICKET (Mark as Sold, etc.) ==========
-app.patch('/api/tickets/:id', async (req, res) => {
+app.patch('/api/tickets/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -206,7 +220,7 @@ app.patch('/api/tickets/:id', async (req, res) => {
 });
 
 // ========== DELETE TICKET ==========
-app.delete('/api/tickets/:id', async (req, res) => {
+app.delete('/api/tickets/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     console.log('🗑️ Deleting ticket with ID:', id);
@@ -240,8 +254,6 @@ app.post('/api/pay', (req, res) => {
 });
 
 // ========== ADMIN LOGIN ==========
-const ADMIN_PASSWORD = "admin123";
-
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) {
